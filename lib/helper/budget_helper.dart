@@ -47,8 +47,6 @@ class BudgetHelper {
     getStorage.write(isfirst, true);
   }
 
-  nothing() {}
-
   init() async {
     rawdbPath = await getDatabasesPath();
     String path = join(rawdbPath, dbName);
@@ -68,6 +66,7 @@ class BudgetHelper {
       //balance
       db.execute(
           "CREATE TABLE IF NOT EXISTS $tbl_bal($id INTEGER PRIMARY KEY ,$bal INTEGER )");
+
       db.rawInsert("INSERT INTO $tbl_bal VALUES(101,0)");
     });
   }
@@ -94,7 +93,6 @@ class BudgetHelper {
     List tmp_data = await database.rawQuery("SELECT * FROM $tbl_bal");
     List<BalanceModal> bal_data =
         tmp_data.map((e) => BalanceModal.fromMap(data: e)).toList();
-    log("$bal_data");
     int bal2 = bal_data[0].balance;
     if (type2 == "income") {
       bal2 += amt2;
@@ -108,9 +106,19 @@ class BudgetHelper {
     return a;
   }
 
+  Future<int> updateTran(
+      {required String rem,
+      required int b,
+      required String ty,
+      required int id2}) async {
+    List args = [rem, b, ty];
+    String sql =
+        "UPDATE $tbl_name SET $remark = ?,$amt = ?,$type = ? WHERE $id=$id2";
+    return await database.rawUpdate(sql, args);
+  }
+
   Future<int> getBalance() async {
     List tmp_data = await database.rawQuery("SELECT * FROM $tbl_bal");
-    print("$tmp_data");
     List<BalanceModal> bal_data =
         tmp_data.map((e) => BalanceModal.fromMap(data: e)).toList();
     if (bal_data.isEmpty) {
@@ -118,7 +126,6 @@ class BudgetHelper {
       getBalance();
     }
     int bal2 = bal_data[0].balance;
-    log("$bal2");
     return bal2;
   }
 
@@ -127,8 +134,7 @@ class BudgetHelper {
   }
 
   insertbal({required int balance}) {
-    database
-        .rawUpdate("UPDATE TABLE $tbl_bal SET $bal = $balance WHERE $id = 101");
+    database.rawUpdate("UPDATE $tbl_bal SET $bal = $balance WHERE $id = 101");
     Get.snackbar("Balance Updated", "$balance updated");
   }
 

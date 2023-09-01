@@ -1,5 +1,8 @@
+import 'dart:developer';
 import 'package:budget_tracker/controller/budget_controller.dart';
+import 'package:budget_tracker/controller/page_controller.dart';
 import 'package:budget_tracker/helper/budget_helper.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
@@ -10,8 +13,12 @@ class Home extends StatelessWidget {
   Home({super.key});
 
   Budget_Controller controller = Get.put(Budget_Controller());
+  Page_controller page_controller = Get.find();
 
   GlobalKey<FormState> formkey = GlobalKey<FormState>();
+
+  String remarks = "";
+  int amount = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -57,36 +64,110 @@ class Home extends StatelessWidget {
                               children: [
                                 SlidableAction(
                                   onPressed: (val) {
-                                    AlertDialog(
-                                      title: const Text("Edit Transaction"),
-                                      content: Form(
-                                        key: formkey,
-                                        child: Column(
-                                          children: [
-                                            TextFormField(),
-                                            TextFormField(),
-                                            TextFormField(),
-                                          ],
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text("Edit Transaction"),
+                                        content: Form(
+                                          key: formkey,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              TextFormField(
+                                                validator: (val) {
+                                                  if (val == null) {
+                                                    return "Please Enter Remarks";
+                                                  } else {
+                                                    return null;
+                                                  }
+                                                },
+                                                onSaved: (val) {
+                                                  remarks = val!;
+                                                },
+                                                decoration:
+                                                    const InputDecoration(
+                                                  hintText: "Remarks",
+                                                  border: OutlineInputBorder(),
+                                                ),
+                                              ),
+                                              const SizedBox(
+                                                height: 10,
+                                              ),
+                                              TextFormField(
+                                                validator: (val) {
+                                                  if (val == null) {
+                                                    return "Please Enter Remarks";
+                                                  } else {
+                                                    return null;
+                                                  }
+                                                },
+                                                onSaved: (val) {
+                                                  amount = int.parse(val!);
+                                                },
+                                                keyboardType:
+                                                    TextInputType.number,
+                                                decoration:
+                                                    const InputDecoration(
+                                                  hintText: "Balance",
+                                                  border: OutlineInputBorder(),
+                                                ),
+                                              ),
+                                              const SizedBox(
+                                                height: 10,
+                                              ),
+                                              Obx(
+                                                () {
+                                                  return CupertinoSegmentedControl(
+                                                    children: const {
+                                                      'income': Text("Income"),
+                                                      'expense':
+                                                          Text("Expense"),
+                                                    },
+                                                    onValueChanged: (val) {
+                                                      page_controller
+                                                          .changeCategory(
+                                                              inc: val);
+                                                    },
+                                                    groupValue: page_controller
+                                                        .income.value,
+                                                  );
+                                                },
+                                              ),
+                                            ],
+                                          ),
                                         ),
+                                        actions: [
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              formkey.currentState!.validate();
+                                              log("${modal.id}");
+                                              if (formkey.currentState!
+                                                  .validate()) {
+                                                formkey.currentState!.save();
+                                                controller.updaTra(
+                                                    rem: remarks,
+                                                    b: amount,
+                                                    ty: page_controller
+                                                        .income.value,
+                                                    id2: modal.id);
+                                                (controller.updateRow.value ==
+                                                        1)
+                                                    ? Get.snackbar(
+                                                        "Updated", "Done 😎")
+                                                    : Get.snackbar("Not Found",
+                                                        "Enter Right Information 👺");
+                                              }
+                                            },
+                                            child: const Text("Save"),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                            child: const Text("Cancel"),
+                                          ),
+                                        ],
                                       ),
-                                      actions: [
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            formkey.currentState!.validate();
-                                            if (formkey.currentState!
-                                                .validate()) {
-                                              formkey.currentState!.save();
-                                            }
-                                          },
-                                          child: const Text("Save"),
-                                        ),
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                          child: const Text("Cancel"),
-                                        ),
-                                      ],
                                     );
                                   },
                                   icon: Icons.edit,
